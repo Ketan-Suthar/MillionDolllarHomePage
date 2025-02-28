@@ -1,5 +1,6 @@
 package com.mdhp.error;
 
+import com.mdhp.constants.ErrorMessages;
 import com.mdhp.exceptions.AlreadyBought;
 import com.mdhp.exceptions.BadRequest;
 import com.mdhp.pojo.response.ErrorResponse;
@@ -15,7 +16,7 @@ public class GlobalExceptionHandler {
     // Handle generic exceptions (e.g., any exception)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGlobalException(Exception ex) {
-        return new ResponseEntity<>(new ErrorResponse("Internal Server Error", ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(new ErrorResponse(ErrorMessages.ISE, ErrorMessages.ISE), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(AlreadyBought.class)

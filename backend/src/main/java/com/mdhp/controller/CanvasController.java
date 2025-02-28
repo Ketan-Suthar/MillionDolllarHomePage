@@ -25,6 +25,7 @@ public class CanvasController {
     @CacheEvict(value = "activeAds", allEntries = true)
     public ResponseEntity<String> buyPixels(@RequestBody CanvasPojo buyRequest) throws IOException, AlreadyBought, BadRequest {
         System.out.println(buyRequest);
+        var a = 1/0;
         return canvasService.buyPixels(buyRequest);
     }
 
