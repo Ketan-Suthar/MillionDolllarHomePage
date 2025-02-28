@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -21,7 +22,8 @@ public class CanvasController {
 
     @PostMapping("/buy")
     @CacheEvict(value = "activeAds", allEntries = true)
-    public ResponseEntity<String> buyPixels(@RequestBody CanvasPojo buyRequest) {
+    public ResponseEntity<String> buyPixels(@RequestBody CanvasPojo buyRequest) throws IOException {
+        System.out.println(buyRequest);
         if (buyRequest.getDays() < 1 || buyRequest.getDays() > 30) {
             return ResponseEntity.badRequest().body("Days must be between 1 and 30.");
         }
