@@ -1,31 +1,40 @@
-package com.mdhp.service;
+package com.mdhp.service.impl;
 
 import com.mdhp.constants.Constants;
 import com.mdhp.exceptions.AlreadyBought;
 import com.mdhp.exceptions.BadRequest;
+import com.mdhp.exceptions.TooManyRequests;
 import com.mdhp.model.Canvas;
 import com.mdhp.pojo.CanvasPojo;
 import com.mdhp.repository.CanvasRepository;
+import com.mdhp.service.IRateLimitingService;
 import com.mdhp.utils.CanvasUtils;
 import com.mdhp.utils.DateUtils;
 import com.mdhp.utils.ImageUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
+
 
 @Service
 public class CanvasService {
 
     @Autowired
     private CanvasRepository canvasRepository;
+
+    @Autowired
+    private CacheService cacheService;
+
+    @Autowired
+    private IRateLimitingService slidingWindowRateLimiting;
+
 
     private static boolean pixelInRange(final CanvasPojo buyRequest) throws BadRequest {
         if (buyRequest.getP1().getX() < Constants.PIXEL_START) return false;
@@ -91,10 +100,24 @@ public class CanvasService {
         canvas.setActive(true);
         canvas.setUrl(buyRequest.getUrl());
 //        canvasRepository.save(canvas);
+        cacheService.evictCache("activeAds");
         return ResponseEntity.ok("Purchase successful.");
     }
 
-    public List<Canvas> getActiveAds() {
-        return canvasRepository.findByActiveTrue();
+    public List<Canvas> getActiveAds(HttpServletRequest request) throws TooManyRequests {
+        if (slidingWindowRateLimiting.isRateLimited(request)) {
+            throw new TooManyRequests("Rate limit exceeded.", "You can make maximum %s requests in %s seconds.".
+                    formatted(IRateLimitingService.MAX_REQUESTS, IRateLimitingService.TIME_WINDOW/1000));
+        }
+
+        List<Canvas> cachedAds = cacheService.getFromCache("activeAds");
+        if (cachedAds != null) {
+            System.out.println("Cache hit for active ads");
+            return cachedAds;
+        }
+        System.out.println("Fetching active ads");
+        List<Canvas> activeAds = canvasRepository.findByActiveTrue();
+        cacheService.storeInCache("activeAds", activeAds, 1, TimeUnit.DAYS);
+        return activeAds;
     }
 }

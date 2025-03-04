@@ -2,9 +2,11 @@ package com.mdhp.controller;
 
 import com.mdhp.exceptions.AlreadyBought;
 import com.mdhp.exceptions.BadRequest;
+import com.mdhp.exceptions.TooManyRequests;
 import com.mdhp.model.Canvas;
 import com.mdhp.pojo.CanvasPojo;
-import com.mdhp.service.CanvasService;
+import com.mdhp.service.impl.CanvasService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,13 +27,12 @@ public class CanvasController {
     @CacheEvict(value = "activeAds", allEntries = true)
     public ResponseEntity<String> buyPixels(@RequestBody CanvasPojo buyRequest) throws IOException, AlreadyBought, BadRequest {
         System.out.println(buyRequest);
-        var a = 1/0;
         return canvasService.buyPixels(buyRequest);
     }
 
     @GetMapping("/active")
     @Cacheable(value = "activeAds")
-    public List<Canvas> getActiveAds() {
-        return canvasService.getActiveAds();
+    public List<Canvas> getActiveAds(HttpServletRequest request) throws TooManyRequests {
+        return canvasService.getActiveAds(request);
     }
 }
