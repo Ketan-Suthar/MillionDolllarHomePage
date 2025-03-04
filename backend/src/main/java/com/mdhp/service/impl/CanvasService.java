@@ -7,6 +7,7 @@ import com.mdhp.exceptions.TooManyRequests;
 import com.mdhp.model.Canvas;
 import com.mdhp.pojo.CanvasPojo;
 import com.mdhp.repository.CanvasRepository;
+import com.mdhp.service.ICacheService;
 import com.mdhp.service.IRateLimitingService;
 import com.mdhp.utils.CanvasUtils;
 import com.mdhp.utils.DateUtils;
@@ -30,7 +31,7 @@ public class CanvasService {
     private CanvasRepository canvasRepository;
 
     @Autowired
-    private CacheService cacheService;
+    private ICacheService redisCache;
 
     @Autowired
     private IRateLimitingService slidingWindowRateLimiting;
@@ -100,7 +101,7 @@ public class CanvasService {
         canvas.setActive(true);
         canvas.setUrl(buyRequest.getUrl());
 //        canvasRepository.save(canvas);
-        cacheService.evictCache("activeAds");
+        redisCache.evictCache("activeAds");
         return ResponseEntity.ok("Purchase successful.");
     }
 
@@ -110,14 +111,14 @@ public class CanvasService {
                     formatted(IRateLimitingService.MAX_REQUESTS, IRateLimitingService.TIME_WINDOW/1000));
         }
 
-        List<Canvas> cachedAds = cacheService.getFromCache("activeAds");
+        List<Canvas> cachedAds = redisCache.getFromCache("activeAds");
         if (cachedAds != null) {
             System.out.println("Cache hit for active ads");
             return cachedAds;
         }
         System.out.println("Fetching active ads");
         List<Canvas> activeAds = canvasRepository.findByActiveTrue();
-        cacheService.storeInCache("activeAds", activeAds, 1, TimeUnit.DAYS);
+        redisCache.storeInCache("activeAds", activeAds, 1, TimeUnit.DAYS);
         return activeAds;
     }
 }
