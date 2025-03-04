@@ -8,6 +8,7 @@ import com.mdhp.model.Canvas;
 import com.mdhp.pojo.CanvasPojo;
 import com.mdhp.repository.CanvasRepository;
 import com.mdhp.service.ICacheService;
+import com.mdhp.service.ICanvasService;
 import com.mdhp.service.IRateLimitingService;
 import com.mdhp.utils.CanvasUtils;
 import com.mdhp.utils.DateUtils;
@@ -25,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 
 @Service
-public class CanvasService {
+public class CanvasService implements ICanvasService {
 
     @Autowired
     private CanvasRepository canvasRepository;
@@ -49,7 +50,7 @@ public class CanvasService {
         return true;
     }
 
-    public void validations(final CanvasPojo buyRequest) throws AlreadyBought, BadRequest {
+    private void validations(final CanvasPojo buyRequest) throws AlreadyBought, BadRequest {
         final var area = buyRequest.getPointsForDb();
         if (buyRequest.getDays() < 1 || buyRequest.getDays() > 30) {
             throw new BadRequest("Bad Request", "Days must be between 1 and 30.");

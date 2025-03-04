@@ -5,6 +5,7 @@ import com.mdhp.exceptions.BadRequest;
 import com.mdhp.exceptions.TooManyRequests;
 import com.mdhp.model.Canvas;
 import com.mdhp.pojo.CanvasPojo;
+import com.mdhp.service.ICanvasService;
 import com.mdhp.service.impl.CanvasService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +22,7 @@ import java.util.List;
 @RequestMapping("/canvas")
 public class CanvasController {
     @Autowired
-    private CanvasService canvasService;
+    private ICanvasService canvasService;
 
     @PostMapping("/buy")
     @CacheEvict(value = "activeAds", allEntries = true)
